@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- AuthProvider and useAuth are intentionally co-located */
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 import { authService } from "@/lib/auth.service";
 import { profilesRepository, userRolesRepository } from "@/lib/repositories";
 import type { AppRole } from "@/lib/digitron";
@@ -26,6 +27,7 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const qc = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
@@ -56,7 +58,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setRoles([]);
       }
-      if (active) setLoading(false);
+      if (active) {
+        setLoading(false);
+        if (data.session) {
+          void qc.invalidateQueries();
+        }
+      }
     });
 
     const { data: sub } = authService.onAuthStateChange((event, newSession) => {
@@ -64,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       if (newSession?.user) {
         setTimeout(() => void loadProfile(newSession.user.id), 0);
+        void qc.invalidateQueries();
       } else {
         setProfile(null);
         setRoles([]);
@@ -74,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
       sub.subscription.unsubscribe();
     };
-  }, [loadProfile]);
+  }, [loadProfile, qc]);
 
   const signOut = async () => {
     await authService.signOut();

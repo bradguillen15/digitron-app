@@ -25,53 +25,19 @@ export async function selectComboboxOption(
   }).toPass({ timeout: 30_000 });
 }
 
-function isCustomersMinResponse(url: string): boolean {
-  return url.includes("/rest/v1/customers") && url.includes("select=");
-}
-
-function isOrderDetailResponse(url: string, orderId: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return parsed.pathname.endsWith("/orders") && parsed.searchParams.get("id") === `eq.${orderId}`;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Navigates to an order detail page and waits until the order payload loaded.
- */
+/** Navigates to an order detail page and waits until the order content is rendered. */
 export async function gotoOrderDetail(page: Page, orderId: string): Promise<void> {
-  const orderResponse = page.waitForResponse(
-    (response) => isOrderDetailResponse(response.url(), orderId) && response.ok(),
-    { timeout: 30_000 },
-  );
-
   await page.goto(`/orders/${orderId}`);
   await waitForAuthReady(page);
-  await orderResponse;
 
-  await expect(page.getByText(labels.orders.notFound)).not.toBeVisible({ timeout: 5_000 });
-  await expect(page.getByRole("link", { name: "Volver" })).toBeVisible({ timeout: 15_000 });
+  await expect(async () => {
+    await expect(page.getByText(labels.orders.notFound)).not.toBeVisible();
+    await expect(page.getByRole("link", { name: "Volver" })).toBeVisible();
+  }).toPass({ timeout: 30_000 });
 }
 
 export async function gotoNewOrderForm(page: Page): Promise<void> {
-  const clientsResponse = page.waitForResponse(
-    (response) => isCustomersMinResponse(response.url()) && response.ok(),
-    { timeout: 30_000 },
-  );
-
   await page.goto("/orders/new");
   await waitForAuthReady(page);
-  await clientsResponse;
   await expect(page.getByRole("combobox").first()).toBeVisible({ timeout: 15_000 });
-}
-
-/** Returns a promise that resolves when equipment rows load for the selected client. */
-export function waitForEquipmentOptions(page: Page): Promise<void> {
-  return page
-    .waitForResponse((response) => response.url().includes("/rest/v1/equipment") && response.ok(), {
-      timeout: 30_000,
-    })
-    .then(() => undefined);
 }

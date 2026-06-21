@@ -224,6 +224,7 @@ function OrderDetailPage() {
     queryKey: ["order", orderId],
     queryFn: () => ordersRepository.getById(orderId),
     enabled: !authLoading && !!session,
+    refetchOnMount: "always",
   });
 
   const { data: evaluation } = useQuery({

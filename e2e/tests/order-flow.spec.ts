@@ -1,11 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { labels } from "../helpers/labels";
-import {
-  gotoNewOrderForm,
-  gotoOrderDetail,
-  selectComboboxOption,
-  waitForEquipmentOptions,
-} from "../helpers/page";
+import { gotoNewOrderForm, gotoOrderDetail, selectComboboxOption } from "../helpers/page";
 import {
   deleteTestCustomer,
   getServiceRoleKey,
@@ -44,9 +39,7 @@ test.describe("Admin — order flow", () => {
     const { clientId, customerName } = await seedTestCustomerEquipment();
     try {
       await gotoNewOrderForm(page);
-      const equipmentLoaded = waitForEquipmentOptions(page);
       await selectComboboxOption(page, 0, customerName);
-      await equipmentLoaded;
       await selectComboboxOption(page, 1, /Laptop — E2E Test/i);
 
       await page
