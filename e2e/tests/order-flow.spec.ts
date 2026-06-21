@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { labels } from "../helpers/labels";
+import { gotoNewOrderForm, gotoOrderDetail, selectComboboxOption } from "../helpers/page";
 import {
   deleteTestCustomer,
   getServiceRoleKey,
@@ -15,11 +16,19 @@ test.describe("Admin — order flow", () => {
   });
 
   test("new order form renders with all required fields", async ({ page }) => {
-    await page.goto("/orders/new");
+    await gotoNewOrderForm(page);
     await expect(page).not.toHaveURL(/\/login/);
-
     await expect(page.getByRole("combobox").first()).toBeVisible();
     await expect(page.getByRole("button", { name: labels.orders.createOrder })).toBeVisible();
+  });
+
+  // Static UI — no seed needed; the "Nueva orden" link is always present for admin.
+  test("admin sees new-order action on orders list", async ({ page }) => {
+    await page.goto("/orders");
+    await expect(page.locator("main")).toBeVisible();
+    await expect(
+      page.getByRole("main").getByRole("link", { name: labels.orders.newOrder }),
+    ).toBeVisible();
   });
 
   test("admin can create a new service order", async ({ page }) => {
@@ -28,77 +37,85 @@ test.describe("Admin — order flow", () => {
     }
 
     const { clientId, customerName } = await seedTestCustomerEquipment();
+    try {
+      await gotoNewOrderForm(page);
+      await selectComboboxOption(page, 0, customerName);
+      await selectComboboxOption(page, 1, /Laptop — E2E Test/i);
 
-    await page.goto("/orders/new");
-    await expect(page.getByRole("combobox").first()).toBeVisible({ timeout: 15_000 });
+      await page
+        .getByRole("textbox", { name: labels.orders.problemReported })
+        .fill("E2E test problem description");
 
-    await page.getByRole("combobox").first().click();
-    await page.getByRole("option", { name: customerName }).click();
+      await page.getByRole("button", { name: labels.orders.createOrder }).click();
 
-    await expect(page.getByRole("combobox").nth(1)).toBeEnabled({ timeout: 10_000 });
-    await page.getByRole("combobox").nth(1).click();
-    await page.getByRole("option", { name: /Laptop — E2E Test/i }).click();
-
-    await page
-      .getByRole("textbox", { name: labels.orders.problemReported })
-      .fill("E2E test problem description");
-
-    await page.getByRole("button", { name: labels.orders.createOrder }).click();
-
-    await page.waitForURL(/\/orders\/[a-z0-9-]+$/, { timeout: 10_000 });
-    await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
-
-    await deleteTestCustomer(clientId);
-  });
-
-  test("admin sees new-order action on orders list", async ({ page }) => {
-    if (!getServiceRoleKey()) {
-      test.skip(true, "SUPABASE_SERVICE_ROLE_KEY not set — skipping data-dependent test");
+      await page.waitForURL(/\/orders\/[a-z0-9-]+$/i, { timeout: 15_000 });
+      await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
+    } finally {
+      await deleteTestCustomer(clientId);
     }
-
-    const { clientId } = await seedTestCustomerEquipment();
-
-    await page.goto("/orders");
-    await expect(
-      page.getByRole("main").getByRole("link", { name: labels.orders.newOrder }),
-    ).toBeVisible();
-
-    await deleteTestCustomer(clientId);
   });
 });
 
 test.describe("Admin — order detail stage actions", () => {
-  test("send to evaluation button is visible on intake stage order", async ({ page }) => {
+  test.beforeEach(() => {
     if (!getServiceRoleKey()) {
-      test.skip(true, "SUPABASE_SERVICE_ROLE_KEY not set — skipping data-dependent test");
+      test.skip(true, "SUPABASE_SERVICE_ROLE_KEY not set — skipping data-dependent tests");
     }
+  });
 
+  test("send to evaluation button is visible on intake stage order", async ({ page }) => {
     const { clientId, equipmentId } = await seedTestCustomerEquipment();
-    const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E direct seed test");
+    try {
+      const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E direct seed test");
 
-    await page.goto(`/orders/${order.id}`);
-    await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible();
-    await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
+      await gotoOrderDetail(page, order.id);
+      await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
+    } finally {
+      await deleteTestCustomer(clientId);
+    }
+  });
 
-    await deleteTestCustomer(clientId);
+  test("admin can advance intake order to evaluation stage", async ({ page }) => {
+    const { clientId, equipmentId } = await seedTestCustomerEquipment();
+    try {
+      const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E transition test");
+
+      await gotoOrderDetail(page, order.id);
+      await expect(
+        page.getByRole("button", { name: labels.orders.sendToEvaluation }),
+      ).toBeVisible({ timeout: 15_000 });
+
+      await page.getByRole("button", { name: labels.orders.sendToEvaluation }).click();
+
+      // Exact match prevents "Evaluación técnica" card heading from being a false positive.
+      await expect(
+        page.getByText(labels.stage.evaluation, { exact: true }).first(),
+      ).toBeVisible({ timeout: 15_000 });
+      await expect(
+        page.getByRole("button", { name: labels.orders.sendToEvaluation }),
+      ).not.toBeVisible();
+    } finally {
+      await deleteTestCustomer(clientId);
+    }
   });
 
   test("closed order shows no action buttons", async ({ page }) => {
-    if (!getServiceRoleKey()) {
-      test.skip(true, "SUPABASE_SERVICE_ROLE_KEY not set — skipping data-dependent test");
-    }
-
     const { clientId, equipmentId } = await seedTestCustomerEquipment();
-    const order = await seedTestOrder(clientId, equipmentId, "closed", "E2E closed order test");
+    try {
+      const order = await seedTestOrder(clientId, equipmentId, "closed", "E2E closed order test");
 
-    await page.goto(`/orders/${order.id}`);
-    await expect(page.getByText(labels.stage.closed).first()).toBeVisible();
+      await gotoOrderDetail(page, order.id);
+      await expect(page.getByText(labels.stage.closed).first()).toBeVisible({ timeout: 15_000 });
 
-    await expect(
-      page.getByRole("button", { name: labels.orders.sendToEvaluation }),
-    ).not.toBeVisible();
-    await expect(page.getByRole("button", { name: labels.orders.closeOrder })).not.toBeVisible();
-
-    await deleteTestCustomer(clientId);
+      await expect(
+        page.getByRole("button", { name: labels.orders.sendToEvaluation }),
+      ).not.toBeVisible();
+      await expect(page.getByRole("button", { name: labels.orders.closeOrder })).not.toBeVisible();
+    } finally {
+      await deleteTestCustomer(clientId);
+    }
   });
 });

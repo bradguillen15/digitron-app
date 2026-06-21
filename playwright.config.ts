@@ -14,6 +14,7 @@ export default defineConfig({
   testMatch: "**/*.spec.ts",
   outputDir: "./e2e/results",
   fullyParallel: false,
+  timeout: process.env.CI ? 60_000 : 30_000,
   retries: process.env.CI ? 2 : 0,
   reporter: "list",
   webServer: {
@@ -52,6 +53,13 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         storageState: "e2e/fixtures/technician-state.json",
+      },
+    },
+    {
+      name: "no-auth",
+      testMatch: /auth\.spec\.ts/,
+      use: {
+        ...devices["Desktop Chrome"],
       },
     },
   ],

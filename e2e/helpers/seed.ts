@@ -24,6 +24,7 @@ async function postRow<T>(table: string, body: Record<string, unknown>): Promise
     throw new Error(`seed ${table}: ${response.status} ${await response.text()}`);
   }
   const rows = (await response.json()) as T[];
+  if (!rows[0]) throw new Error(`seed ${table}: empty response — check RLS or service role key`);
   return rows[0];
 }
 

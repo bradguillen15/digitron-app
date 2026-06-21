@@ -223,6 +223,7 @@ function OrderDetailPage() {
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => ordersRepository.getById(orderId),
+    enabled: !authLoading && !!profile,
   });
 
   const { data: evaluation } = useQuery({

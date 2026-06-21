@@ -2,6 +2,13 @@
 export const labels = {
   stage: {
     intake: "Recepción",
+    evaluation: "Evaluación",
+    budget: "Presupuesto",
+    customer_decision: "Decisión del cliente",
+    on_hold: "En espera",
+    repair: "Reparación",
+    payment: "Pago",
+    delivered: "Entregado",
     closed: "Cerrado",
   },
   orders: {
@@ -9,10 +16,21 @@ export const labels = {
     createOrder: "Crear orden",
     problemReported: "Problema reportado",
     sendToEvaluation: "Enviar a evaluación",
+    completeEvaluation: "Completar evaluación",
+    sendToDecision: "Enviar decisión al cliente",
     closeOrder: "Cerrar orden",
+    stageUpdated: "Etapa actualizada",
+    notFound: "Orden no encontrada.",
+  },
+  form: {
+    client: "Cliente",
+    equipment: "Equipo",
   },
   sidebar: {
     users: "Usuarios",
     settings: "Configuración",
+  },
+  login: {
+    signIn: "Ingresar",
   },
 } as const;
