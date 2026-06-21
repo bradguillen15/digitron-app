@@ -12,11 +12,18 @@ async function loginAndSave(email: string, password: string, stateFile: string):
   const browser = await chromium.launch();
   const page = await browser.newPage();
 
-  await page.goto(`${BASE_URL}/login`);
-  await page.waitForSelector("#email", { timeout: 10_000 });
+  await page.goto(`${BASE_URL}/login`, { waitUntil: "load" });
 
-  await page.fill("#email", email);
-  await page.fill("#password", password);
+  const emailInput = page.locator('input[type="email"]');
+  const passwordInput = page.locator('input[type="password"]');
+
+  // Login uses react-hook-form inputs without #email/#password ids.
+  // Wait through auth bootstrap ("loading") until the form is interactive.
+  await emailInput.waitFor({ state: "visible", timeout: 30_000 });
+  await passwordInput.waitFor({ state: "visible", timeout: 10_000 });
+
+  await emailInput.fill(email);
+  await passwordInput.fill(password);
   await page.click('button[type="submit"]');
 
   // Wait until redirected away from login (dashboard or orders)
