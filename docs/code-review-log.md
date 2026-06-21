@@ -174,3 +174,40 @@ _This is the first review. The following describes the current state as of `0f45
 | Low | **F-02** Begin phasing `$orderId.tsx` into sub-components (long-term; ship behind a feature branch) | dev | XL |
 
 ---
+
+## Review #2 — 2026-06-21 @ `838c070`
+
+Focused follow-up review on **code duplication and reuse** (requested after Review #1 fixes were applied).
+
+### Summary
+
+Audited custom components, hooks, repositories, and routes for duplicated logic and missed reuse of existing helpers/components. Found and fixed three concrete duplication clusters. One larger structural duplication (entity form dialogs) is documented as a recommendation rather than refactored, pending review.
+
+### Findings
+
+| ID | Location | Severity | SOLID | Finding | Status |
+|---|---|---|---|---|---|
+| D-01 | [`src/routes/_authenticated/usuarios.tsx`](src/routes/_authenticated/usuarios.tsx) | **High** | DRY | The delete confirmation introduced in F-07 hand-rolled an `AlertDialog` (with `pendingDelete` state) instead of reusing the existing `DeleteConfirmButton` component used by `clients.tsx`, `inventory.tsx`, `equipment.tsx`. It also referenced a non-existent key `users.deleteConfirmTitle` (rendered raw). Loading state used an inline `<p>` instead of `AsyncCardBody`. | ✅ Fixed — now uses `DeleteConfirmButton` + `AsyncCardBody`; added `users.deleteDescription` / `users.empty` keys (en+es). |
+| D-02 | [`inventory.tsx`](src/routes/_authenticated/inventory.tsx), [`reports.tsx`](src/routes/_authenticated/reports.tsx) | **Medium** | DRY | Raw `.toFixed(2)` money formatting in 4 places, despite `formatAmount` (added in F-13) existing for exactly this. | ✅ Fixed — all routed through `formatAmount`. |
+| D-03 | Multiple routes (`$orderId.tsx` ×7, `equipment.tsx`, `orders/index.tsx`, `reports.tsx`) | **Medium** | DRY | `new Date(x).toLocaleDateString()` / `.toLocaleString()` repeated ~11 times for display. | ✅ Fixed — added `formatDate` / `formatDateTime` to `utils.ts`; replaced all display call sites. Date-comparison/filter and ISO-stamp usages intentionally left untouched. |
+| D-04 | [`client-form-dialog.tsx`](src/components/client-form-dialog.tsx), [`equipment-form-dialog.tsx`](src/components/equipment-form-dialog.tsx), [`parts-form-dialog.tsx`](src/components/parts-form-dialog.tsx) | **Medium** | DRY | The three entity form dialogs share an identical skeleton: `useForm` + `zodResolver` + `EMPTY` defaults + reset-on-open `useEffect` + create-or-update `upsert` mutation (toast + invalidate + close + `onSuccess`) + Dialog/Form/Footer chrome. Only schema, fields, repository, query keys, and messages differ. | ⏸️ Documented, not refactored — generic form abstraction is high-risk/debatable; recommend a `useUpsertMutation` helper + shared dialog shell behind review. |
+
+### Patterns Observed
+
+- **Resolved since last review** — F-01 through F-09, F-11, F-13 confirmed applied in the codebase.
+- **Recurring** — Reusable presentational components (`DeleteConfirmButton`, `AsyncCardBody`) exist and are used by 3 of 4 list pages; new code should default to them rather than re-implementing.
+- **New** — `formatAmount` / `formatDate` / `formatDateTime` are now the canonical formatting helpers in `src/lib/utils.ts`; prefer them over inline `.toFixed`/`.toLocale*`.
+
+### Architecture Changes Since Last Review
+
+- [x] `usuarios.tsx` brought in line with sibling list-page conventions (shared delete + async-body components).
+- [x] Money and date formatting centralized in `src/lib/utils.ts`.
+- [ ] **D-04 outstanding**: entity form dialogs still duplicate the upsert/dialog skeleton.
+
+### Action Items
+
+| Priority | Task | Owner | Effort |
+|---|---|---|---|
+| Medium | **D-04** Extract a shared `useUpsertMutation` helper (and optionally a form-dialog shell) for the client/equipment/parts dialogs | dev | M |
+
+---
