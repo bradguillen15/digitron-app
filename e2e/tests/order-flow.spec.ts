@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { labels } from "../helpers/labels";
-import { gotoNewOrderForm, gotoOrderDetail, waitForAuthReady } from "../helpers/page";
+import { gotoNewOrderForm, gotoOrderDetail, waitForAdminOrderAccess } from "../helpers/page";
 import { createIntakeOrderFromSeed } from "../helpers/order-ui";
 import {
   deleteTestCustomer,
@@ -26,10 +26,7 @@ test.describe("Admin — order flow", () => {
 
   test("admin sees new-order action on orders list", async ({ page }) => {
     await page.goto("/orders");
-    await waitForAuthReady(page);
-    await expect(
-      page.getByRole("main").getByRole("link", { name: labels.orders.newOrder }),
-    ).toBeVisible({ timeout: 15_000 });
+    await waitForAdminOrderAccess(page);
   });
 
   test("admin can create a new service order", async ({ page }) => {

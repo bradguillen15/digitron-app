@@ -88,11 +88,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void authService.getSession().then(({ data }) => {
       if (!active || initialized) return;
-      void applySession(data.session);
+      if (data.session) {
+        void applySession(data.session);
+      }
+      // If session is still null, wait for INITIAL_SESSION before clearing loading.
     });
+
+    const bootstrapTimeout = setTimeout(() => {
+      if (!active || initialized) return;
+      void applySession(null);
+    }, 10_000);
 
     return () => {
       active = false;
+      clearTimeout(bootstrapTimeout);
       sub.subscription.unsubscribe();
     };
   }, [loadProfile, qc]);

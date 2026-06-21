@@ -6,7 +6,17 @@ import { labels } from "./labels";
 export async function waitForAuthReady(page: Page): Promise<void> {
   await expect(page.getByText(/^Cargando…$/)).not.toBeVisible({ timeout: 15_000 });
   await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator("header")).toContainText(/Hola,/i, { timeout: 15_000 });
+  await expect(page.getByRole("link", { name: labels.sidebar.settings })).toBeVisible({
+    timeout: 15_000,
+  });
+}
+
+/** Waits until role-gated admin UI (e.g. new order) is available. */
+export async function waitForAdminOrderAccess(page: Page): Promise<void> {
+  await waitForAuthReady(page);
+  await expect(
+    page.getByRole("main").getByRole("link", { name: labels.orders.newOrder }),
+  ).toBeVisible({ timeout: 30_000 });
 }
 
 /** Opens a Radix select and picks an option, retrying if the data hasn't loaded yet. */
