@@ -220,7 +220,7 @@ function OrderDetailPage() {
 
   // ── Queries ──────────────────────────────────────────────────────────────
 
-  const { data: order, isLoading } = useQuery({
+  const { data: order, isPending: orderPending } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => ordersRepository.getById(orderId),
     enabled: !authLoading && !!session,
@@ -627,7 +627,7 @@ function OrderDetailPage() {
 
   // ── Loading / not found ───────────────────────────────────────────────────
 
-  if (isLoading || authLoading) return <OrderDetailSkeleton />;
+  if (authLoading || orderPending) return <OrderDetailSkeleton />;
   if (!order) return <p className="text-sm text-muted-foreground">{t("orders.notFound")}</p>;
 
   // ── Helpers ───────────────────────────────────────────────────────────────

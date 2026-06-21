@@ -11,5 +11,6 @@ export function useClientsMin() {
     queryKey: ["clients-min"],
     queryFn: () => customersRepository.getAllMin() as Promise<ClientMinItem[]>,
     enabled: !loading && !!session,
+    refetchOnMount: "always",
   });
 }
