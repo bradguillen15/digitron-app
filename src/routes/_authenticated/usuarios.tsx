@@ -271,7 +271,9 @@ function UsersPage() {
 
       <AlertDialog
         open={pendingDelete !== null}
-        onOpenChange={(open) => { if (!open) setPendingDelete(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>

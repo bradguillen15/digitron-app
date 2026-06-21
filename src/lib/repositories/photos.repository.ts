@@ -11,9 +11,10 @@ export const photosRepository = {
     const rows = data ?? [];
     if (rows.length === 0) return [];
 
-    const { data: signed } = await supabase.storage
-      .from("order-photos")
-      .createSignedUrls(rows.map((p) => p.storage_path), 3600);
+    const { data: signed } = await supabase.storage.from("order-photos").createSignedUrls(
+      rows.map((p) => p.storage_path),
+      3600,
+    );
 
     const urlByPath = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
     return rows.map((p) => ({ ...p, url: urlByPath.get(p.storage_path) ?? "" }));
