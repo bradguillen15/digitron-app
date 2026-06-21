@@ -55,7 +55,7 @@ type OrderRow = {
 
 function OrdersPage() {
   const { t } = useTranslation();
-  const { roles } = useAuth();
+  const { roles, session } = useAuth();
   const { clientId, equipmentId } = Route.useSearch();
   const navigate = useNavigate();
   const [stage, setStage] = useState<string>("all");
@@ -67,6 +67,7 @@ function OrdersPage() {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
     queryFn: () => ordersRepository.getAll() as Promise<OrderRow[]>,
+    enabled: typeof window !== "undefined" && !!session,
   });
 
   const { data: techs = [] } = useTechnicians();

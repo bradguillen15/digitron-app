@@ -5,7 +5,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
 import { useTechnicians } from "@/hooks/use-technicians";
 import { PageHeader } from "@/components/page-header";
 import { useTranslation } from "react-i18next";
@@ -223,14 +222,8 @@ function OrderDetailPage() {
 
   const { data: order, isPending: orderPending } = useQuery({
     queryKey: ["order", orderId],
-    queryFn: async () => {
-      const {
-        data: { session: activeSession },
-      } = await supabase.auth.getSession();
-      if (!activeSession) return null;
-      return ordersRepository.getById(orderId);
-    },
-    enabled: typeof window !== "undefined",
+    queryFn: () => ordersRepository.getById(orderId),
+    enabled: typeof window !== "undefined" && !!session,
     refetchOnMount: "always",
     retry: 2,
   });

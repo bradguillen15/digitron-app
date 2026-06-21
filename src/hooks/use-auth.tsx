@@ -35,23 +35,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = useCallback(async (uid: string) => {
     try {
-      for (let attempt = 0; attempt < 5; attempt++) {
-        const {
-          data: { session: activeSession },
-        } = await authService.getSession();
-        if (!activeSession) {
-          await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
-          continue;
-        }
-
-        const [profileRow, roleRows] = await Promise.all([
-          profilesRepository.getById(uid),
-          userRolesRepository.getByUserId(uid),
-        ]);
-        setProfile((profileRow as Profile | null) ?? null);
-        setRoles(roleRows.map((r) => r.role as AppRole));
-        return;
-      }
+      const [profileRow, roleRows] = await Promise.all([
+        profilesRepository.getById(uid),
+        userRolesRepository.getByUserId(uid),
+      ]);
+      setProfile((profileRow as Profile | null) ?? null);
+      setRoles(roleRows.map((r) => r.role as AppRole));
     } catch (err) {
       console.error("[auth] failed to load profile:", err);
     }

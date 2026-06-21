@@ -1,10 +1,12 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
+import { labels } from "./labels";
 
 /** Waits until auth bootstrap finished (past the global loading shell). */
 export async function waitForAuthReady(page: Page): Promise<void> {
   await expect(page.getByText(/^Cargando…$/)).not.toBeVisible({ timeout: 15_000 });
   await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator("header")).toContainText(/Hola,/i, { timeout: 15_000 });
 }
 
 /** Opens a Radix select and picks an option, retrying if the data hasn't loaded yet. */
@@ -30,6 +32,7 @@ export async function gotoOrderDetail(page: Page, orderId: string): Promise<void
   await page.goto(`/orders/${orderId}`);
   await waitForAuthReady(page);
   await expect(page.getByRole("link", { name: "Volver" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(labels.orders.notFound)).not.toBeVisible();
 }
 
 export async function gotoNewOrderForm(page: Page): Promise<void> {
