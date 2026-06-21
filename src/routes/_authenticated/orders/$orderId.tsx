@@ -204,7 +204,7 @@ const PAYMENT_METHODS = ["cash", "card", "transfer"] as const;
 function OrderDetailPage() {
   const { t } = useTranslation();
   const { orderId } = useParams({ from: "/_authenticated/orders/$orderId" });
-  const { profile, roles, loading: authLoading } = useAuth();
+  const { profile, roles, session, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const transition = useServerFn(transitionOrder);
@@ -223,7 +223,7 @@ function OrderDetailPage() {
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => ordersRepository.getById(orderId),
-    enabled: !authLoading && !!profile,
+    enabled: !authLoading && !!session,
   });
 
   const { data: evaluation } = useQuery({

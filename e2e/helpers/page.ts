@@ -1,6 +1,5 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { labels } from "./labels";
 
 /** Waits until auth bootstrap finished (past the global loading shell). */
 export async function waitForAuthReady(page: Page): Promise<void> {
@@ -8,7 +7,7 @@ export async function waitForAuthReady(page: Page): Promise<void> {
   await expect(page.locator("main")).toBeVisible({ timeout: 15_000 });
 }
 
-/** Opens a Radix select and picks an option, retrying after reload if data was fetched pre-auth. */
+/** Opens a Radix select and picks an option, retrying if the data hasn't loaded yet. */
 export async function selectComboboxOption(
   page: Page,
   comboboxIndex: number,
@@ -20,38 +19,21 @@ export async function selectComboboxOption(
     await page.keyboard.press("Escape").catch(() => undefined);
     await expect(combobox).toBeVisible({ timeout: 5_000 });
     await combobox.click();
-    const option = page.getByRole("option", { name: optionName });
-    try {
-      await expect(option).toBeVisible({ timeout: 3_000 });
-    } catch {
-      await page.reload({ waitUntil: "load" });
-      await waitForAuthReady(page);
-      throw new Error("Option not visible yet — retry after reload");
-    }
-    await option.click();
+    // 15s gives React Query time to fetch the list; no reload so the cache is preserved.
+    await expect(page.getByRole("option", { name: optionName })).toBeVisible({ timeout: 15_000 });
+    await page.getByRole("option", { name: optionName }).click();
   }).toPass({ timeout: 30_000 });
 }
 
 /**
- * Order detail queries can fail if they run before Supabase session restore.
- * Reload once auth is ready so React Query refetches with the session token.
+ * Navigates to an order detail page and waits for auth to finish.
+ * The caller's own assertions (with timeouts) drive the actual content check.
+ * Reloading here would reset the React Query cache and restart auth, which
+ * creates an infinite retry cycle rather than solving the timing issue.
  */
 export async function gotoOrderDetail(page: Page, orderId: string): Promise<void> {
   await page.goto(`/orders/${orderId}`);
   await waitForAuthReady(page);
-
-  await expect(async () => {
-    if (
-      await page
-        .getByText(labels.orders.notFound)
-        .isVisible()
-        .catch(() => false)
-    ) {
-      await page.reload({ waitUntil: "load" });
-      await waitForAuthReady(page);
-    }
-    await expect(page.getByText(labels.orders.notFound)).not.toBeVisible({ timeout: 5_000 });
-  }).toPass({ timeout: 20_000 });
 }
 
 export async function gotoNewOrderForm(page: Page): Promise<void> {

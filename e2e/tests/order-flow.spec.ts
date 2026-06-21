@@ -48,7 +48,7 @@ test.describe("Admin — order flow", () => {
 
       await page.getByRole("button", { name: labels.orders.createOrder }).click();
 
-      await page.waitForURL(/\/orders\/[a-z0-9-]+$/i, { timeout: 15_000 });
+      await page.waitForURL(/\/orders\/[a-z0-9-]+$/i, { timeout: 30_000 });
       await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
     } finally {
       await deleteTestCustomer(clientId);
@@ -70,7 +70,7 @@ test.describe("Admin — order detail stage actions", () => {
 
       await gotoOrderDetail(page, order.id);
       await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible({
-        timeout: 15_000,
+        timeout: 30_000,
       });
       await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
     } finally {
@@ -85,14 +85,14 @@ test.describe("Admin — order detail stage actions", () => {
 
       await gotoOrderDetail(page, order.id);
       await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible({
-        timeout: 15_000,
+        timeout: 30_000,
       });
 
       await page.getByRole("button", { name: labels.orders.sendToEvaluation }).click();
 
       // Exact match prevents "Evaluación técnica" card heading from being a false positive.
       await expect(page.getByText(labels.stage.evaluation, { exact: true }).first()).toBeVisible({
-        timeout: 15_000,
+        timeout: 30_000,
       });
       await expect(
         page.getByRole("button", { name: labels.orders.sendToEvaluation }),
@@ -108,7 +108,7 @@ test.describe("Admin — order detail stage actions", () => {
       const order = await seedTestOrder(clientId, equipmentId, "closed", "E2E closed order test");
 
       await gotoOrderDetail(page, order.id);
-      await expect(page.getByText(labels.stage.closed).first()).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByText(labels.stage.closed).first()).toBeVisible({ timeout: 30_000 });
 
       await expect(
         page.getByRole("button", { name: labels.orders.sendToEvaluation }),

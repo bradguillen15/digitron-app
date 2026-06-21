@@ -33,8 +33,10 @@ test.describe("Auth — unauthenticated access", () => {
     await page.locator('input[type="password"]').fill("wrongpassword");
     await page.getByRole("button", { name: labels.login.signIn }).click();
 
-    // The app must stay on /login and surface an error — not silently redirect.
+    // The app must stay on /login and the sign-in form must still be present.
     await expect(page).toHaveURL(/\/login/, { timeout: 10_000 });
-    await expect(page.locator("main")).toBeVisible();
+    await expect(page.getByRole("button", { name: labels.login.signIn })).toBeVisible({
+      timeout: 5_000,
+    });
   });
 });
