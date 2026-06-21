@@ -35,12 +35,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = useCallback(async (uid: string) => {
     try {
-      const [profileRow, roleRows] = await Promise.all([
-        profilesRepository.getById(uid),
-        userRolesRepository.getByUserId(uid),
-      ]);
-      setProfile((profileRow as Profile | null) ?? null);
-      setRoles(roleRows.map((r) => r.role as AppRole));
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const {
+          data: { session: activeSession },
+        } = await authService.getSession();
+        if (!activeSession) {
+          await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
+          continue;
+        }
+
+        const [profileRow, roleRows] = await Promise.all([
+          profilesRepository.getById(uid),
+          userRolesRepository.getByUserId(uid),
+        ]);
+        setProfile((profileRow as Profile | null) ?? null);
+        setRoles(roleRows.map((r) => r.role as AppRole));
+        return;
+      }
     } catch (err) {
       console.error("[auth] failed to load profile:", err);
     }
@@ -48,11 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    let bootstrapped = false;
+    let initialized = false;
 
-    const bootstrap = async (newSession: Session | null) => {
-      if (!active || bootstrapped) return;
-      bootstrapped = true;
+    const applySession = async (newSession: Session | null) => {
+      if (!active) return;
       setSession(newSession);
       if (newSession?.user) {
         await loadProfile(newSession.user.id);
@@ -61,28 +71,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles([]);
       }
       setLoading(false);
+      initialized = true;
       if (newSession) {
         void qc.invalidateQueries();
       }
     };
 
-    void authService.getSession().then(({ data }) => bootstrap(data.session));
-
     const { data: sub } = authService.onAuthStateChange((event, newSession) => {
-      if (event === "INITIAL_SESSION") {
-        void bootstrap(newSession);
+      if (event === "TOKEN_REFRESHED") {
+        setSession(newSession);
         return;
       }
-      if (event === "TOKEN_REFRESHED") return;
+      if (event === "INITIAL_SESSION") {
+        void applySession(newSession);
+        return;
+      }
 
       setSession(newSession);
       if (newSession?.user) {
-        setTimeout(() => void loadProfile(newSession.user.id), 0);
+        void loadProfile(newSession.user.id);
         void qc.invalidateQueries();
       } else {
         setProfile(null);
         setRoles([]);
       }
+    });
+
+    void authService.getSession().then(({ data }) => {
+      if (!active || initialized) return;
+      void applySession(data.session);
     });
 
     return () => {

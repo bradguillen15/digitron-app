@@ -1,8 +1,14 @@
 import { test, expect } from "@playwright/test";
 import { labels } from "../helpers/labels";
-import { gotoNewOrderForm, gotoOrderDetail } from "../helpers/page";
-import { createIntakeOrderViaUI } from "../helpers/order-ui";
-import { deleteTestCustomerByName, getServiceRoleKey, updateTestOrderStage } from "../helpers/seed";
+import { gotoNewOrderForm, gotoOrderDetail, waitForAuthReady } from "../helpers/page";
+import { createIntakeOrderFromSeed } from "../helpers/order-ui";
+import {
+  deleteTestCustomer,
+  getServiceRoleKey,
+  seedTestCustomerEquipment,
+  seedTestOrder,
+  updateTestOrderStage,
+} from "../helpers/seed";
 
 test.describe("Admin — order flow", () => {
   test("orders list page renders and is accessible", async ({ page }) => {
@@ -18,13 +24,12 @@ test.describe("Admin — order flow", () => {
     await expect(page.getByRole("button", { name: labels.orders.createOrder })).toBeVisible();
   });
 
-  // Static UI — no seed needed; the "Nueva orden" link is always present for admin.
   test("admin sees new-order action on orders list", async ({ page }) => {
     await page.goto("/orders");
-    await expect(page.locator("main")).toBeVisible();
+    await waitForAuthReady(page);
     await expect(
       page.getByRole("main").getByRole("link", { name: labels.orders.newOrder }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("admin can create a new service order", async ({ page }) => {
@@ -32,11 +37,11 @@ test.describe("Admin — order flow", () => {
       test.skip(true, "SUPABASE_SERVICE_ROLE_KEY not set — skipping cleanup-dependent test");
     }
 
-    const { customerName } = await createIntakeOrderViaUI(page);
+    const { clientId } = await createIntakeOrderFromSeed(page);
     try {
       await expect(page.getByText(labels.stage.intake).first()).toBeVisible({ timeout: 15_000 });
     } finally {
-      await deleteTestCustomerByName(customerName);
+      await deleteTestCustomer(clientId);
     }
   });
 });
@@ -49,20 +54,24 @@ test.describe("Admin — order detail stage actions", () => {
   });
 
   test("send to evaluation button is visible on intake stage order", async ({ page }) => {
-    const { customerName } = await createIntakeOrderViaUI(page);
+    const { clientId, equipmentId } = await seedTestCustomerEquipment();
+    const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E fault");
     try {
+      await gotoOrderDetail(page, order.id);
       await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible({
         timeout: 15_000,
       });
       await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
     } finally {
-      await deleteTestCustomerByName(customerName);
+      await deleteTestCustomer(clientId);
     }
   });
 
   test("admin can advance intake order to evaluation stage", async ({ page }) => {
-    const { customerName } = await createIntakeOrderViaUI(page);
+    const { clientId, equipmentId } = await seedTestCustomerEquipment();
+    const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E fault");
     try {
+      await gotoOrderDetail(page, order.id);
       await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible({
         timeout: 15_000,
       });
@@ -76,15 +85,16 @@ test.describe("Admin — order detail stage actions", () => {
         page.getByRole("button", { name: labels.orders.sendToEvaluation }),
       ).not.toBeVisible();
     } finally {
-      await deleteTestCustomerByName(customerName);
+      await deleteTestCustomer(clientId);
     }
   });
 
   test("closed order shows no action buttons", async ({ page }) => {
-    const { orderId, customerName } = await createIntakeOrderViaUI(page);
+    const { clientId, equipmentId } = await seedTestCustomerEquipment();
+    const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E fault");
     try {
-      await updateTestOrderStage(orderId, "closed");
-      await gotoOrderDetail(page, orderId);
+      await updateTestOrderStage(order.id, "closed");
+      await gotoOrderDetail(page, order.id);
 
       await expect(page.getByText(labels.stage.closed).first()).toBeVisible({ timeout: 15_000 });
       await expect(
@@ -92,7 +102,7 @@ test.describe("Admin — order detail stage actions", () => {
       ).not.toBeVisible();
       await expect(page.getByRole("button", { name: labels.orders.closeOrder })).not.toBeVisible();
     } finally {
-      await deleteTestCustomerByName(customerName);
+      await deleteTestCustomer(clientId);
     }
   });
 });
