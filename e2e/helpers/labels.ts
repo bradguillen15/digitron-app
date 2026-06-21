@@ -24,6 +24,7 @@ export const labels = {
     completeEvaluation: "Completar evaluación",
     sendToDecision: "Enviar decisión al cliente",
     closeOrder: "Cerrar orden",
+    back: "Volver",
     stageUpdated: "Etapa actualizada",
     notFound: "Orden no encontrada.",
   },
@@ -43,6 +44,9 @@ export const labels = {
   sidebar: {
     users: "Usuarios",
     settings: "Configuración",
+  },
+  roles: {
+    super: "Superusuario",
   },
   login: {
     signIn: "Ingresar",

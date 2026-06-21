@@ -1,5 +1,5 @@
 import { test as setup } from "@playwright/test";
-import { waitForAuthReady } from "./helpers/page";
+import { waitForAdminRoles } from "./helpers/page";
 
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL ?? "admin@digitron.test";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "digitron123";
@@ -18,6 +18,6 @@ setup("authenticate as admin", async ({ page }) => {
   await page.click('button[type="submit"]');
 
   await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 });
-  await waitForAuthReady(page);
+  await waitForAdminRoles(page);
   await page.context().storageState({ path: "e2e/fixtures/admin-state.json" });
 });

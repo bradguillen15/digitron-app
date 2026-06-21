@@ -11,9 +11,15 @@ export async function waitForAuthReady(page: Page): Promise<void> {
   });
 }
 
+/** Waits until the admin super role is loaded (sidebar footer + RLS-ready session). */
+export async function waitForAdminRoles(page: Page): Promise<void> {
+  await waitForAuthReady(page);
+  await expect(page.getByText(labels.roles.super)).toBeVisible({ timeout: 30_000 });
+}
+
 /** Waits until role-gated admin UI (e.g. new order) is available. */
 export async function waitForAdminOrderAccess(page: Page): Promise<void> {
-  await waitForAuthReady(page);
+  await waitForAdminRoles(page);
   await expect(
     page.getByRole("main").getByRole("link", { name: labels.orders.newOrder }),
   ).toBeVisible({ timeout: 30_000 });
@@ -40,13 +46,15 @@ export async function selectComboboxOption(
 /** Navigates to an order detail page and waits until the order content is rendered. */
 export async function gotoOrderDetail(page: Page, orderId: string): Promise<void> {
   await page.goto(`/orders/${orderId}`);
-  await waitForAuthReady(page);
-  await expect(page.getByRole("link", { name: "Volver" })).toBeVisible({ timeout: 30_000 });
+  await waitForAdminRoles(page);
+  await expect(page.getByRole("link", { name: labels.orders.back })).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(page.getByText(labels.orders.notFound)).not.toBeVisible();
 }
 
 export async function gotoNewOrderForm(page: Page): Promise<void> {
   await page.goto("/orders/new");
-  await waitForAuthReady(page);
+  await waitForAdminRoles(page);
   await expect(page.getByRole("combobox").first()).toBeVisible({ timeout: 15_000 });
 }
