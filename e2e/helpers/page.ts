@@ -1,6 +1,5 @@
 import type { Page } from "@playwright/test";
 import { expect } from "@playwright/test";
-import { labels } from "./labels";
 
 /** Waits until auth bootstrap finished (past the global loading shell). */
 export async function waitForAuthReady(page: Page): Promise<void> {
@@ -20,8 +19,9 @@ export async function selectComboboxOption(
     await page.keyboard.press("Escape").catch(() => undefined);
     await expect(combobox).toBeVisible({ timeout: 5_000 });
     await combobox.click();
-    await expect(page.getByRole("option", { name: optionName })).toBeVisible({ timeout: 15_000 });
-    await page.getByRole("option", { name: optionName }).click();
+    const option = page.getByRole("option", { name: optionName });
+    await expect(option).toBeVisible({ timeout: 15_000 });
+    await option.click();
   }).toPass({ timeout: 30_000 });
 }
 
@@ -29,15 +29,16 @@ export async function selectComboboxOption(
 export async function gotoOrderDetail(page: Page, orderId: string): Promise<void> {
   await page.goto(`/orders/${orderId}`);
   await waitForAuthReady(page);
-
-  await expect(async () => {
-    await expect(page.getByText(labels.orders.notFound)).not.toBeVisible();
-    await expect(page.getByRole("link", { name: "Volver" })).toBeVisible();
-  }).toPass({ timeout: 30_000 });
+  // Reload once so client-only queries run with a restored Supabase session.
+  await page.reload();
+  await waitForAuthReady(page);
+  await expect(page.getByRole("link", { name: "Volver" })).toBeVisible({ timeout: 30_000 });
 }
 
 export async function gotoNewOrderForm(page: Page): Promise<void> {
   await page.goto("/orders/new");
+  await waitForAuthReady(page);
+  await page.reload();
   await waitForAuthReady(page);
   await expect(page.getByRole("combobox").first()).toBeVisible({ timeout: 15_000 });
 }

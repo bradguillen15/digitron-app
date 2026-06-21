@@ -49,25 +49,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
 
-    authService.getSession().then(async ({ data }) => {
+    const bootstrap = async (newSession: Session | null) => {
       if (!active) return;
-      setSession(data.session);
-      if (data.session?.user) {
-        await loadProfile(data.session.user.id);
+      setSession(newSession);
+      if (newSession?.user) {
+        await loadProfile(newSession.user.id);
       } else {
         setProfile(null);
         setRoles([]);
       }
-      if (active) {
-        setLoading(false);
-        if (data.session) {
-          void qc.invalidateQueries();
-        }
+      setLoading(false);
+      if (newSession) {
+        void qc.invalidateQueries();
       }
-    });
+    };
 
     const { data: sub } = authService.onAuthStateChange((event, newSession) => {
-      if (event === "INITIAL_SESSION") return;
+      if (event === "INITIAL_SESSION") {
+        void bootstrap(newSession);
+        return;
+      }
+      if (event === "TOKEN_REFRESHED") return;
+
       setSession(newSession);
       if (newSession?.user) {
         setTimeout(() => void loadProfile(newSession.user.id), 0);
