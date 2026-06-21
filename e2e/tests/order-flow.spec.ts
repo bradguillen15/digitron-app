@@ -84,16 +84,16 @@ test.describe("Admin — order detail stage actions", () => {
       const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E transition test");
 
       await gotoOrderDetail(page, order.id);
-      await expect(
-        page.getByRole("button", { name: labels.orders.sendToEvaluation }),
-      ).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible({
+        timeout: 15_000,
+      });
 
       await page.getByRole("button", { name: labels.orders.sendToEvaluation }).click();
 
       // Exact match prevents "Evaluación técnica" card heading from being a false positive.
-      await expect(
-        page.getByText(labels.stage.evaluation, { exact: true }).first(),
-      ).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByText(labels.stage.evaluation, { exact: true }).first()).toBeVisible({
+        timeout: 15_000,
+      });
       await expect(
         page.getByRole("button", { name: labels.orders.sendToEvaluation }),
       ).not.toBeVisible();
