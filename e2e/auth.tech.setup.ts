@@ -1,5 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { test as setup } from "@playwright/test";
+import { waitForAuthReady } from "./helpers/page";
 
 const TECH_EMAIL = process.env.E2E_TECH_EMAIL ?? "tech@digitron.test";
 const TECH_PASSWORD = process.env.E2E_TECH_PASSWORD ?? "digitron123";
@@ -19,6 +20,7 @@ setup("authenticate as technician", async ({ page }) => {
     await page.click('button[type="submit"]');
 
     await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 });
+    await waitForAuthReady(page);
     await page.context().storageState({ path: "e2e/fixtures/technician-state.json" });
     loginSucceeded = true;
   } catch (err) {
@@ -29,7 +31,6 @@ setup("authenticate as technician", async ({ page }) => {
     );
   }
 
-  // Write the empty fallback outside the catch so writeFileSync errors surface visibly.
   if (!loginSucceeded) {
     writeFileSync("e2e/fixtures/technician-state.json", EMPTY_STATE);
   }
