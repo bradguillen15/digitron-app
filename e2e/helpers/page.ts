@@ -29,16 +29,11 @@ export async function selectComboboxOption(
 export async function gotoOrderDetail(page: Page, orderId: string): Promise<void> {
   await page.goto(`/orders/${orderId}`);
   await waitForAuthReady(page);
-  // Reload once so client-only queries run with a restored Supabase session.
-  await page.reload();
-  await waitForAuthReady(page);
   await expect(page.getByRole("link", { name: "Volver" })).toBeVisible({ timeout: 30_000 });
 }
 
 export async function gotoNewOrderForm(page: Page): Promise<void> {
   await page.goto("/orders/new");
-  await waitForAuthReady(page);
-  await page.reload();
   await waitForAuthReady(page);
   await expect(page.getByRole("combobox").first()).toBeVisible({ timeout: 15_000 });
 }

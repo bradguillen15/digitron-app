@@ -89,3 +89,28 @@ export async function deleteTestCustomer(clientId: string): Promise<void> {
   await deleteWhere("orders", `client_id=eq.${clientId}`);
   await deleteWhere("customers", `id=eq.${clientId}`);
 }
+
+export async function deleteTestCustomerByName(name: string): Promise<void> {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/customers?name=eq.${encodeURIComponent(name)}&select=id`,
+    { headers: adminHeaders() },
+  );
+  if (!response.ok) {
+    throw new Error(`lookup customer ${name}: ${response.status} ${await response.text()}`);
+  }
+  const rows = (await response.json()) as { id: string }[];
+  for (const row of rows) {
+    await deleteTestCustomer(row.id);
+  }
+}
+
+export async function updateTestOrderStage(orderId: string, stage: string): Promise<void> {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}`, {
+    method: "PATCH",
+    headers: { ...adminHeaders(), Prefer: "return=minimal" },
+    body: JSON.stringify({ stage }),
+  });
+  if (!response.ok) {
+    throw new Error(`update order ${orderId}: ${response.status} ${await response.text()}`);
+  }
+}

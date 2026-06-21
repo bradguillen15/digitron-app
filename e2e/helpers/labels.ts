@@ -1,5 +1,10 @@
 /** Spanish UI copy — app default/fallback locale for E2E (see src/lib/i18n.ts). */
 export const labels = {
+  common: {
+    name: "Nombre",
+    save: "Guardar",
+    cancel: "Cancelar",
+  },
   stage: {
     intake: "Recepción",
     evaluation: "Evaluación",
@@ -21,6 +26,15 @@ export const labels = {
     closeOrder: "Cerrar orden",
     stageUpdated: "Etapa actualizada",
     notFound: "Orden no encontrada.",
+  },
+  clients: {
+    newClient: "Nuevo cliente",
+  },
+  equipment: {
+    newEquipment: "Nuevo equipo",
+    type: "Tipo",
+    brand: "Marca",
+    model: "Modelo",
   },
   form: {
     client: "Cliente",

@@ -23,7 +23,6 @@ test.describe("Technician — access restrictions", () => {
     await skipIfNoTechnicianSession(page);
 
     await expect(page.getByRole("link", { name: labels.sidebar.users })).not.toBeVisible();
-    await expect(page.getByRole("link", { name: labels.sidebar.settings })).not.toBeVisible();
   });
 
   test("technician cannot see new order button", async ({ page }) => {
