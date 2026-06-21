@@ -2,11 +2,7 @@ import { test, expect } from "@playwright/test";
 import { labels } from "../helpers/labels";
 import { gotoNewOrderForm, gotoOrderDetail } from "../helpers/page";
 import { createIntakeOrderViaUI } from "../helpers/order-ui";
-import {
-  deleteTestCustomerByName,
-  getServiceRoleKey,
-  updateTestOrderStage,
-} from "../helpers/seed";
+import { deleteTestCustomerByName, getServiceRoleKey, updateTestOrderStage } from "../helpers/seed";
 
 test.describe("Admin — order flow", () => {
   test("orders list page renders and is accessible", async ({ page }) => {

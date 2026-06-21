@@ -48,9 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    let bootstrapped = false;
 
     const bootstrap = async (newSession: Session | null) => {
-      if (!active) return;
+      if (!active || bootstrapped) return;
+      bootstrapped = true;
       setSession(newSession);
       if (newSession?.user) {
         await loadProfile(newSession.user.id);
@@ -63,6 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void qc.invalidateQueries();
       }
     };
+
+    void authService.getSession().then(({ data }) => bootstrap(data.session));
 
     const { data: sub } = authService.onAuthStateChange((event, newSession) => {
       if (event === "INITIAL_SESSION") {
