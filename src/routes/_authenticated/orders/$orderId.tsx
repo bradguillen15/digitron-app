@@ -274,7 +274,7 @@ function PartsEditor({
       )}
       {canEdit && (
         <div className="flex items-end gap-2">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             <Select value={partId} onValueChange={setPartId}>
               <SelectTrigger>
                 <SelectValue placeholder={t("orders.selectPart")} />
@@ -1094,7 +1094,7 @@ function OrderDetailPage() {
 
       {/* ── Main grid ── */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           {/* Client & equipment summary */}
           <Card>
             <CardHeader>
