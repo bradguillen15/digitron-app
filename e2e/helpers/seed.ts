@@ -59,7 +59,9 @@ export async function seedTestCustomerEquipment(): Promise<{
 }> {
   const { apiUrl, serviceRoleKey } = loadE2eSupabaseEnv();
   if (!serviceRoleKey) {
-    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for seed helpers — run E2E via pnpm test:e2e");
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY is required for seed helpers — run E2E via pnpm test:e2e",
+    );
   }
 
   const customerName = uniqueCustomerName();

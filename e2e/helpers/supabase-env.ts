@@ -32,7 +32,8 @@ export function loadE2eSupabaseEnv(): E2eSupabaseEnv {
 
   return {
     apiUrl: process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? DEFAULT_API_URL,
-    anonKey: process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "",
+    anonKey:
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? "",
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
   };
 }
