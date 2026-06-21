@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 import { labels } from "../helpers/labels";
-import { skipIfNoTechnicianSession, waitForAuthenticatedShell } from "../helpers/technician-session";
+import {
+  skipIfNoTechnicianSession,
+  waitForAuthenticatedShell,
+} from "../helpers/technician-session";
 
 /**
  * Technician role E2E tests.
@@ -19,12 +22,8 @@ test.describe("Technician — access restrictions", () => {
   test("technician does not see admin-only navigation items", async ({ page }) => {
     await skipIfNoTechnicianSession(page);
 
-    await expect(
-      page.getByRole("link", { name: new RegExp(labels.sidebar.users, "i") }),
-    ).not.toBeVisible();
-    await expect(
-      page.getByRole("link", { name: new RegExp(labels.sidebar.settings, "i") }),
-    ).not.toBeVisible();
+    await expect(page.getByRole("link", { name: labels.sidebar.users })).not.toBeVisible();
+    await expect(page.getByRole("link", { name: labels.sidebar.settings })).not.toBeVisible();
   });
 
   test("technician cannot see new order button", async ({ page }) => {

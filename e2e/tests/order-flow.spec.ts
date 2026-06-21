@@ -19,9 +19,7 @@ test.describe("Admin — order flow", () => {
     await expect(page).not.toHaveURL(/\/login/);
 
     await expect(page.getByRole("combobox").first()).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: labels.orders.createOrder }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: labels.orders.createOrder })).toBeVisible();
   });
 
   test("admin can create a new service order", async ({ page }) => {
@@ -42,7 +40,7 @@ test.describe("Admin — order flow", () => {
     await page.getByRole("option", { name: /Laptop — E2E Test/i }).click();
 
     await page
-      .getByRole("textbox", { name: new RegExp(labels.orders.problemReported, "i") })
+      .getByRole("textbox", { name: labels.orders.problemReported })
       .fill("E2E test problem description");
 
     await page.getByRole("button", { name: labels.orders.createOrder }).click();
@@ -76,17 +74,10 @@ test.describe("Admin — order detail stage actions", () => {
     }
 
     const { clientId, equipmentId } = await seedTestCustomerEquipment();
-    const order = await seedTestOrder(
-      clientId,
-      equipmentId,
-      "intake",
-      "E2E direct seed test",
-    );
+    const order = await seedTestOrder(clientId, equipmentId, "intake", "E2E direct seed test");
 
     await page.goto(`/orders/${order.id}`);
-    await expect(
-      page.getByRole("button", { name: labels.orders.sendToEvaluation }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: labels.orders.sendToEvaluation })).toBeVisible();
     await expect(page.getByText(labels.stage.intake).first()).toBeVisible();
 
     await deleteTestCustomer(clientId);
@@ -98,12 +89,7 @@ test.describe("Admin — order detail stage actions", () => {
     }
 
     const { clientId, equipmentId } = await seedTestCustomerEquipment();
-    const order = await seedTestOrder(
-      clientId,
-      equipmentId,
-      "closed",
-      "E2E closed order test",
-    );
+    const order = await seedTestOrder(clientId, equipmentId, "closed", "E2E closed order test");
 
     await page.goto(`/orders/${order.id}`);
     await expect(page.getByText(labels.stage.closed).first()).toBeVisible();
@@ -111,9 +97,7 @@ test.describe("Admin — order detail stage actions", () => {
     await expect(
       page.getByRole("button", { name: labels.orders.sendToEvaluation }),
     ).not.toBeVisible();
-    await expect(
-      page.getByRole("button", { name: labels.orders.closeOrder }),
-    ).not.toBeVisible();
+    await expect(page.getByRole("button", { name: labels.orders.closeOrder })).not.toBeVisible();
 
     await deleteTestCustomer(clientId);
   });
