@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const bootstrapTimeout = setTimeout(() => {
       if (!active || initialized) return;
       void applySession(null);
-    }, 10_000);
+    }, 5_000);
 
     return () => {
       active = false;
